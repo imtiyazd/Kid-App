@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My 25-Day Holiday Adventure</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#3b82f6"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Adventure">
+<style>
+:root{--bg:#fbf6ee;--card:#fff;--ink:#2b2a33;--mut:#6b6877;--line:#e8e1d4;--c:#3b82f6;--ok:#2e9e6b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:14px 20px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:1.15rem;margin:0 auto 0 0}
+nav button,.btn{font:inherit;min-height:44px;padding:8px 16px;border-radius:14px;border:2px solid var(--line);background:#fff;cursor:pointer;color:var(--ink)}
+nav button.on,.btn.pri{background:var(--c);border-color:var(--c);color:#fff}
+.btn.danger{border-color:#c0392b;color:#c0392b}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #111;outline-offset:2px}
+main{max-width:1000px;margin:0 auto;padding:20px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--card);border-radius:22px;padding:18px;box-shadow:0 4px 18px rgba(60,40,10,.08);border-top:6px solid var(--c)}
+h2{margin:.2em 0}.mut{color:var(--mut)}.big{font-size:2rem;font-weight:700}
+.bar{height:14px;background:#eee;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--c);border-radius:9px;transition:width .4s}
+.task{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;background:#fff;border:2px solid var(--line);border-radius:18px;padding:14px 16px;margin:8px 0;cursor:pointer;min-height:64px}
+.task.done{background:#eaf7f0;border-color:var(--ok)}.task.pend{background:#fff7e0;border-color:#e0a800}
+.task .ic{font-size:1.8rem}.task .t{flex:1}.task .chk{font-size:1.5rem;min-width:2.2rem;text-align:center}
+.task.done .chk{animation:pop .35s}@keyframes pop{50%{transform:scale(1.5)}}
+.kid .task{min-height:96px;font-size:1.5rem}.kid .task .ic{font-size:3rem}.kid .task small{display:none}
+.dots{display:flex;flex-wrap:wrap;gap:8px}.dot{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line);font-size:.9rem;background:#fff}
+.dot.d{background:#d9f3e5;border-color:var(--ok)}.dot.n{border-color:#e0a800;background:#fff3c4;font-weight:700}.dot.m{outline:3px dashed #e0a800}
+.badge{display:inline-flex;gap:6px;align-items:center;padding:6px 12px;border-radius:20px;background:#fff3c4;margin:3px}.badge.off{background:#eee;opacity:.5}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+input,select,textarea{font:inherit;padding:8px 10px;border:2px solid var(--line);border-radius:10px;min-height:42px;max-width:100%}
+input[type=checkbox]{width:22px;height:22px;min-height:0}input[type=number]{width:80px}
+table{border-collapse:collapse;width:100%}td,th{padding:6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#2b2a33;color:#fff;padding:12px 20px;border-radius:14px;z-index:9}
+.warn{background:#fff3cd;padding:10px 14px;border-radius:12px;margin-bottom:12px}
+@media print{header,.noprint{display:none}body{background:#fff}.card{box-shadow:none;break-inside:avoid}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media(max-width:700px){main{padding:14px 12px 96px}header h1{font-size:1rem}header{padding:10px 12px}nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:8}nav button{flex:1;padding:8px 2px;font-size:.78rem;border:0;min-height:52px}.card{padding:14px}.big{font-size:1.6rem}}
+</style></head><body>
+<header><h1>🌟 My 25-Day Holiday Adventure</h1><nav id="nav"></nav></header>
+<main id="app"></main>
+<script>
+"use strict";
+/* ---------- Config & defaults (all editable in Parent Settings) ---------- */
+const CATS={deen:['🕌','Deen'],learn:['📚','Learning'],resp:['🧹','Responsibility'],char:['❤️','Character'],well:['⚽','Wellbeing']};
+const iso=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+const addDays=(s,n)=>{const [y,m,d]=s.split('-').map(Number);return iso(new Date(y,m-1,d+n))};
+const T=(id,cat,icon,name,pts,kids=[],active=true)=>({id,cat,icon,name,pts,kids,active});
+const defaults=()=>({v:1,
+ settings:{start:iso(new Date()),days:25,wake:'09:00',bed:'22:30',pin:'',streakPct:70,screenOn:true,screenPct:85,screenMin:15},
+ children:[
+  {id:'c1',name:'Ahmed',age:11,avatar:'🧑‍🚀',color:'#2563eb',selfApprove:true,prize:'',th:[80,90,100]},
+  {id:'c2',name:'Aisha',age:9,avatar:'🦋',color:'#a855f7',selfApprove:false,prize:'',th:[80,90,100]},
+  {id:'c3',name:'Yusuf',age:5,avatar:'🦁',color:'#d97706',selfApprove:false,prize:'',th:[75,90,100]}],
+ tasks:[T('t1','deen','🌅','Fajr',4,[],false),T('t2','deen','🕌','Dhuhr',4),T('t3','deen','🕌','Asr',4),T('t4','deen','🕌','Maghrib',4),T('t5','deen','🕌','Isha',4),
+  T('t6','deen','📖','Qur\'an reading',8,['c1','c2']),T('t7','deen','🧠','Qur\'an memorization',6,['c1','c2']),T('t8','deen','🔁','Qur\'an revision',3,['c1','c2'],false),
+  T('t9','deen','📖','Qur\'an letters & reading practice',14,['c3']),
+  T('t10','learn','♟️','Chess class',6,['c1']),T('t11','learn','♟️','Chess practice',4,['c1']),
+  T('t12','learn','🎨','Creative class',6,['c2']),T('t13','learn','✏️','Drawing / art practice',4,['c2']),
+  T('t14','learn','🔢','Table 3',5,['c3']),T('t15','learn','🔢','Table 4',5,['c3']),T('t16','learn','🧮','Abacus class',5,['c3'],false),
+  T('t17','learn','📚','Reading / academic learning',10,['c1','c2']),T('t18','learn','📚','Story time',5,['c3']),
+  T('t19','resp','🛏️','Make bed',5),T('t20','resp','👕','Clothes in the right place',5),T('t21','resp','🧹','Keep bedroom clean',5),
+  T('t22','char','💛','Kindness & self-control',5),T('t23','char','🤝','Respect',5),T('t24','char','🙌','Helping others',5),
+  T('t25','well','⚽','Outdoor play / exercise',10)],
+ rec:{},bonus:{},notes:{},screen:{}});
+/* ---------- Storage (IndexedDB) ---------- */
+let S,unlocked=false,view={n:'home'},memOnly=false,saveT;
+const idb=()=>new Promise((ok,no)=>{const r=indexedDB.open('adventure',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});
+async function load(){try{const d=await idb();return await new Promise(ok=>{const q=d.transaction('kv').objectStore('kv').get('state');q.onsuccess=()=>ok(q.result);q.onerror=()=>ok(null)})}catch(e){memOnly=true;return null}}
+function save(){clearTimeout(saveT);saveT=setTimeout(async()=>{try{(await idb()).transaction('kv','readwrite').objectStore('kv').put(S,'state')}catch(e){memOnly=true;render()}},120)}
+/* ---------- Scoring engine ---------- */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>iso(new Date());
+const dates=()=>Array.from({length:S.settings.days},(_,i)=>addDays(S.settings.start,i));
+const dayNo=d=>dates().indexOf(d)+1;
+const curDay=()=>{const t=today(),a=dates();return t<a[0]?0:t>a[a.length-1]?a.length:a.indexOf(t)+1};
+const tasksFor=c=>S.tasks.filter(t=>t.active&&(!t.kids.length||t.kids.includes(c.id)));
+const rk=(c,d,t)=>(c.id||c)+'|'+d+'|'+t;
+const st=(c,d,t)=>S.rec[rk(c,d,t)]||0; // 0 none, 1 done, 2 awaiting approval
+const partial=t=>Math.round(t.pts*(S.settings.partialPct??50)/100); // status 3 = partial credit
+function dayStats(c,d,only){const ts=tasksFor(c).filter(t=>!only||t.cat===only);let max=0,earned=0,n=0;
+ ts.forEach(t=>{max+=t.pts;const x=st(c,d,t.id);if(x===1){earned+=t.pts;n++}else if(x===3){earned+=partial(t);n++}});
+ const bonus=(S.bonus[c.id+'|'+d]||[]).reduce((a,b)=>a+b.pts,0);
+ return{max,earned,bonus,n,total:ts.length,pct:max?Math.round(earned/max*100):0}}
+const elapsed=()=>dates().slice(0,Math.max(curDay(),0));
+function overall(c){let e=0,m=0,b=0;elapsed().forEach(d=>{const s=dayStats(c,d);e+=s.earned;m+=s.max;b+=s.bonus});return{earned:e,max:m,bonus:b,pct:m?Math.round(e/m*100):0}}
+function streaks(c){let cur=0,best=0,run=0;const ds=elapsed();
+ ds.forEach(d=>{if(dayStats(c,d).pct>=S.settings.streakPct)best=Math.max(best,++run);else run=0});
+ for(let i=ds.length-1;i>=0;i--){const ok=dayStats(c,ds[i]).pct>=S.settings.streakPct;if(ok)cur++;else if(i===ds.length-1&&ds[i]===today())continue;else break}
+ return{cur,best}}
+const weekPcts=c=>{const o=[];const ds=elapsed();for(let i=0;i<ds.length;i+=7){const w=ds.slice(i,i+7);o.push(Math.round(w.reduce((a,d)=>a+dayStats(c,d).pct,0)/w.length))}return o};
+const catCount=(c,cat)=>elapsed().filter(d=>dayStats(c,d,cat).pct>=70&&dayStats(c,d,cat).max).length;
+const BADGES=[
+ ['🌟','First Step','Completed a first task',c=>elapsed().some(d=>dayStats(c,d).n>0)],
+ ['🔥','3-Day Streak','3 strong days in a row',c=>streaks(c).best>=3],
+ ['🔥','7-Day Streak','7 strong days in a row',c=>streaks(c).best>=7],
+ ['📖','Qur\'an & Deen Consistency','Strong Deen on 7 days',c=>catCount(c,'deen')>=7],
+ ['🧠','Learning Champion','Strong Learning on 7 days',c=>catCount(c,'learn')>=7],
+ ['❤️','Kindness Star','Strong Character on 7 days',c=>catCount(c,'char')>=7],
+ ['🧹','Responsibility Hero','Strong Responsibility on 7 days',c=>catCount(c,'resp')>=7],
+ ['💪','Never Give Up','Bounced back after a tough day',c=>{const p=elapsed().map(d=>dayStats(c,d).pct);return p.some((v,i)=>i&&p[i-1]<50&&v>=70)}],
+ ['🌱','Growing','A week better than the last',c=>{const w=weekPcts(c);return w.some((v,i)=>i&&v>w[i-1])}],
+ ['🏆','25-Day Finisher','Reached the final day',c=>curDay()>=S.settings.days]];
+const badges=c=>BADGES.map(b=>({i:b[0],n:b[1],d:b[2],on:!!b[3](c)}));
+function prizeStatus(c){const p=overall(c).pct,[a,b,d]=c.th;return p>=d?'🏆 Outstanding':p>=b?'🌟 Excellent':p>=a?'🎁 Eligible for the final prize':'🌱 Keep growing — every day counts'}
+function screenInfo(c){if(!S.settings.screenOn)return null;const earned=elapsed().filter(d=>dayStats(c,d).pct>=S.settings.screenPct).length*S.settings.screenMin;
+ const used=Object.entries(S.screen).filter(([k])=>k.startsWith(c.id+'|')).reduce((a,[,v])=>a+v,0);return{earned,used,left:Math.max(0,earned-used)}}
+function coach(c,d){const s=dayStats(c,d),y=dayStats(c,addDays(d,-1));
+ if(!s.n)return'A fresh page today 🌱 Pick one thing to start with — one step is a great beginning.';
+ if(s.pct===100)return'Every task done — that\'s real consistency! 🌟';
+ if(y.max&&s.pct>y.pct)return'You\'re getting better — more done than yesterday! 💪';
+ if(s.pct>=70)return'Great effort — you\'re building a strong habit! ✨';
+ return'Good work on what you finished. Anything not completed today is okay — tomorrow is a fresh start.'}
+/* ---------- UI helpers ---------- */
+const bar=(p,c)=>`<div class="bar" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100"><i style="width:${p}%;${c?'background:'+c:''}"></i></div>`;
+const stars=p=>'⭐'.repeat(Math.round(p/20))+'☆'.repeat(5-Math.round(p/20));
+const child=id=>S.children.find(c=>c.id===id);
+const fmt=d=>new Date(d+'T12:00').toLocaleDateString(undefined,{month:'short',day:'numeric'});
+const toast=m=>{const t=document.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2600)};
+const dots=(c)=>`<div class="dots" aria-label="25-day journey">${dates().map((d,i)=>{const n=i+1,now=curDay(),ms=n%5===0;const done=n<now||(n===now&&dayStats(c,d).pct>=S.settings.streakPct);
+ return`<div class="dot ${n===now?'n':done?'d':''} ${ms?'m':''}" title="Day ${n}${ms?' — milestone':''}">${n===now?'⭐':done?'✓':n}</div>`}).join('')}</div>`;
+/* ---------- Views ---------- */
+function vHome(){const n=curDay(),h=new Date().getHours();
+ return`<h2>${h<12?'Good morning':h<18?'Good afternoon':'Good evening'}! ${n?`Day ${Math.min(n,S.settings.days)} of ${S.settings.days}`:'Your adventure starts '+fmt(S.settings.start)}</h2>
+ <p class="mut">Everyone is working toward their own goals. No rankings — just personal progress.</p><div class="grid">${S.children.map(c=>{const s=dayStats(c,today()),o=overall(c),k=streaks(c);
+ return`<div class="card" style="--c:${c.color}"><div class="big">${c.avatar} ${esc(c.name)}</div><div class="mut">Age ${c.age}</div>
+ <p>Today: <b>${s.earned}</b> / ${s.max}${s.bonus?` <span title="bonus">+${s.bonus} bonus</span>`:''}</p>${bar(s.pct)}
+ <p>🔥 ${k.cur}-day streak · Overall ${o.pct}%</p><button class="btn pri" data-a="go" data-n="child" data-id="${c.id}">Open my adventure</button></div>`}).join('')}</div>
+ <h2>Family adventure</h2><div class="card">${dots(S.children[0]||{id:''})}<p class="mut">⭐ today · ✓ strong day · dashed = milestone (days 5, 10, 15, 20, 25)</p>${[5,10,15,20,25].includes(n)?`<p class="big">🎉 Milestone — Day ${n}! Look how far you've come.</p>`:''}</div>`}
+function vChild(id,date=today()){const c=child(id);if(!c)return vHome();const kid=c.age<=6,s=dayStats(c,date),o=overall(c),k=streaks(c),sc=screenInfo(c),w=weekPcts(c);
+ const ts=tasksFor(c);let byCat='';for(const cat in CATS){const cs=dayStats(c,date,cat);if(cs.max)byCat+=`<div class="row"><span style="width:${kid?'0':'150px'}">${CATS[cat][0]} ${kid?'':CATS[cat][1]}</span><div style="flex:1;min-width:100px">${bar(cs.pct)}</div><b>${kid?stars(cs.pct):cs.pct+'%'}</b></div>`}
+ const next=badges(c).find(b=>!b.on);
+ return`<div class="${kid?'kid':''}" style="--c:${c.color}"><button class="btn noprint" data-a="go" data-n="home">← Everyone</button>
+ <h2>${c.avatar} ${esc(c.name)}'s Adventure · Day ${Math.min(curDay(),S.settings.days)}</h2>
+ <div class="card"><div class="big">🔥 ${k.cur}-day streak</div><p>${esc(coach(c,date))}</p>
+ <div class="big">⭐ ${s.earned+s.bonus} <small class="mut">(${s.earned} / ${s.max} base${s.bonus?` + ${s.bonus} bonus`:''})</small></div>${bar(s.pct)}${byCat}</div>
+ <h3>Today's mission</h3>${ts.map(t=>{const x=st(c.id,date,t.id);return`<button class="task ${x===1||x===3?'done':x===2?'pend':''}" data-a="kidtap" data-c="${c.id}" data-t="${t.id}" aria-pressed="${x===1}"><span class="ic">${t.icon}</span><span class="t"><b>${esc(t.name)}</b><br><small class="mut">${x===3?'Partly done — nice effort!':x===1?'Done!':x===2?'Waiting for a grown-up to check ✋':'Still to do'} · +${t.pts}</small></span><span class="chk">${x===1?'✅':x===3?'🌓':x===2?'⏳':'○'}</span></button>`}).join('')||'<p>No tasks yet — a parent can add some.</p>'}
+ ${kid?'':`<div class="grid"><div class="card"><h3>My weeks</h3>${w.map((p,i)=>`<div class="row"><span>Week ${i+1}</span><div style="flex:1">${bar(p)}</div>${p}%</div>`).join('')||'—'}<p class="mut">Personal best streak: 🔥 ${k.best}</p></div>
+ <div class="card"><h3>Overall</h3><p class="big">${o.pct}%</p>${bar(o.pct)}<p>${prizeStatus(c)}</p></div></div>`}
+ <div class="card"><h3>Badges</h3>${badges(c).map(b=>`<span class="badge ${b.on?'':'off'}" title="${esc(b.d)}">${b.i} ${esc(b.n)}${b.on?'':' (not yet)'}</span>`).join('')}${next?`<p class="mut">Next badge: ${next.i} ${esc(next.n)} — ${esc(next.d)}</p>`:''}</div>
+ ${sc?`<div class="card"><h3>📺 Screen time reward</h3><p>Earned ${sc.earned} min · used ${sc.used} · <b>${sc.left} min left</b></p><p class="mut">A bonus, not a daily right. Play, rest and family come first.</p></div>`:''}</div>`}
+function vCheckin(){const id=view.id||S.children[0]?.id,c=child(id),date=view.date||today();if(!c)return'<p>Add a child in Settings.</p>';
+ const s=dayStats(c,date),nk=c.id+'|'+date,sc=S.screen[nk]||0;
+ return`<h2>Daily check-in</h2><div class="row">${S.children.map(x=>`<button class="btn ${x.id===id?'pri':''}" style="${x.id===id?'--c:'+x.color:''}" data-a="go" data-n="checkin" data-id="${x.id}" data-d="${date}">${x.avatar} ${esc(x.name)}</button>`).join('')}
+ <input type="date" value="${date}" data-a="chdate" aria-label="Date"></div>
+ <div class="card" style="--c:${c.color}"><b>${fmt(date)}${dayNo(date)?` · Day ${dayNo(date)}`:' (outside challenge dates)'}</b> — Base ${s.earned}/${s.max} (${s.pct}%) + bonus ${s.bonus} = <b>${s.earned+s.bonus}</b><br><small class="mut">Tap a task: once = done · twice = partly (${S.settings.partialPct??50}% of points, e.g. a late prayer) · three times = clear</small>
+ ${tasksFor(c).map(t=>{const x=st(c.id,date,t.id);return`<button class="task ${x===1||x===3?'done':x===2?'pend':''}" data-a="ptoggle" data-c="${c.id}" data-d="${date}" data-t="${t.id}"><span class="ic">${t.icon}</span><span class="t">${esc(t.name)} <small class="mut">+${t.pts}</small></span><span class="chk">${x===1?'✅':x===3?'🌓 partly':x===2?'⏳ approve':'○'}</span></button>`}).join('')}
+ <div class="row"><b>Bonus:</b>${[['Initiative',1],['Improvement',2],['Kindness',2],['Extra effort',2]].map(([l,p])=>`<button class="btn" data-a="bonus" data-k="${nk}" data-l="${l}" data-p="${p}">+${p} ${l}</button>`).join('')}</div>
+ <div>${(S.bonus[nk]||[]).map((b,i)=>`<span class="badge">+${b.pts} ${esc(b.label)} <button data-a="rmbonus" data-k="${nk}" data-i="${i}" aria-label="Remove bonus">✕</button></span>`).join('')}</div>
+ <label>Note<br><textarea style="width:100%" data-a="note" data-k="${nk}" rows="2" placeholder="e.g. Memorized 5 new ayahs">${esc(S.notes[nk]||'')}</textarea></label>
+ ${S.settings.screenOn?`<div class="row">📺 Screen time used today: ${sc} min <button class="btn" data-a="screen" data-k="${nk}" data-n="${S.settings.screenMin}">+${S.settings.screenMin}</button><button class="btn" data-a="screen" data-k="${nk}" data-n="-${S.settings.screenMin}">undo</button></div>`:''}</div>`}
+function vJourney(){return`<h2>The 25-day journey</h2>${S.children.map(c=>{const o=overall(c),k=streaks(c);return`<div class="card" style="--c:${c.color};margin-bottom:14px"><b>${c.avatar} ${esc(c.name)}</b> — ${o.pct}% · longest streak 🔥${k.best}${dots(c)}${weekPcts(c).map((p,i)=>`<div class="row"><span style="width:60px">Week ${i+1}</span><div style="flex:1">${bar(p)}</div>${p}%</div>`).join('')}</div>`}).join('')}`}
+function vReport(){const fin=curDay()>=S.settings.days;return`<div class="noprint row"><button class="btn pri" onclick="print()">🖨️ Print / Save as PDF</button></div><h2>${fin?'🎉 25-Day Adventure Complete!':'Progress report so far'}</h2><div class="grid">${S.children.map(c=>{const o=overall(c),k=streaks(c),w=weekPcts(c),bs=badges(c).filter(b=>b.on),
+ cats=Object.keys(CATS).map(x=>[x,catCount(c,x)]).sort((a,b)=>b[1]-a[1])[0],days=elapsed().filter(d=>dayStats(c,d).pct>=S.settings.streakPct).length;
+ return`<div class="card" style="--c:${c.color}"><div class="big">${c.avatar} ${esc(c.name)}</div><p>Total points: <b>${o.earned+o.bonus}</b> (${o.bonus} bonus)<br>Completion: <b>${o.pct}%</b><br>Strong days: ${days} of ${elapsed().length}<br>Longest streak: 🔥 ${k.best}<br>Badges: ${bs.length}<br>Biggest improvement: ${w.length>1?Math.max(0,Math.max(...w)-w[0])+' pts (week 1 → best week)':'—'}<br>Most consistent in: ${cats[1]?CATS[cats[0]][0]+' '+CATS[cats[0]][1]:'—'}</p>
+ <p>${bs.map(b=>b.i+' '+esc(b.n)).join('<br>')}</p>${unlocked?`<p><b>${prizeStatus(c)}</b>${c.prize?'<br>Prize: '+esc(c.prize):''}</p>`:''}</div>`}).join('')}</div>`}
+const inp=(p,v,t='text',x='')=>`<input type="${t}" value="${esc(v)}" data-p="${p}" ${t==='number'?'data-n="1"':''} ${x}>`;
+function vSettings(){const s=S.settings;
+ return`<h2>Parent settings</h2>${memOnly?'<div class="warn">⚠️ Browser storage is unavailable, so progress won\'t be remembered. Use Export often.</div>':''}
+ <div class="card"><h3>Children</h3><button class="btn pri" data-a="addchild">+ Add child</button>${S.children.map((c,i)=>`<div class="row">${inp(`children.${i}.avatar`,c.avatar,'text','style="width:60px" aria-label="Avatar"')}${inp(`children.${i}.name`,c.name,'text','aria-label="Name"')}Age ${inp(`children.${i}.age`,c.age,'number')}<input type="color" value="${c.color}" data-p="children.${i}.color" aria-label="Colour"><label><input type="checkbox" ${c.selfApprove?'checked':''} data-p="children.${i}.selfApprove" data-b="1"> self-report counts instantly</label><button class="btn danger" data-a="delchild" data-i="${i}">Remove</button></div>
+ <div class="row">🎁 Private prize ${inp(`children.${i}.prize`,c.prize)} Thresholds % ${[0,1,2].map(j=>inp(`children.${i}.th.${j}`,c.th[j],'number')).join('')}</div>`).join('')}</div>
+ <div class="card"><h3>Schedule</h3><div class="row">Start ${inp('settings.start',s.start,'date')} Days ${inp('settings.days',s.days,'number')} Wake ${inp('settings.wake',s.wake,'time')} Bed ${inp('settings.bed',s.bed,'time')}</div>
+ <div class="row">A "strong day" (streaks) is ≥ ${inp('settings.streakPct',s.streakPct,'number')}% of the day's tasks</div>
+ <div class="row">Partly done (e.g. a late prayer) earns ${inp('settings.partialPct',s.partialPct??50,'number')}% of the task's points</div>
+ <div class="row"><label><input type="checkbox" ${s.screenOn?'checked':''} data-p="settings.screenOn" data-b="1"> Screen-time reward</label> unlock ${inp('settings.screenMin',s.screenMin,'number')} min when a day reaches ${inp('settings.screenPct',s.screenPct,'number')}%</div></div>
+ <div class="card"><h3>Tasks &amp; points</h3><div style="overflow:auto"><table><tr><th>On</th><th>Task</th><th>Category</th><th>Pts</th>${S.children.map(c=>`<th>${c.avatar}</th>`).join('')}<th></th></tr>
+ ${S.tasks.map((t,i)=>`<tr><td><input type="checkbox" ${t.active?'checked':''} data-p="tasks.${i}.active" data-b="1" aria-label="Active"></td><td>${inp(`tasks.${i}.icon`,t.icon,'text','style="width:52px"')}${inp(`tasks.${i}.name`,t.name)}</td>
+ <td><select data-p="tasks.${i}.cat">${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${k===t.cat?'selected':''}>${v[1]}</option>`).join('')}</select></td><td>${inp(`tasks.${i}.pts`,t.pts,'number')}</td>
+ ${S.children.map(c=>`<td><input type="checkbox" ${!t.kids.length||t.kids.includes(c.id)?'checked':''} data-a="assign" data-i="${i}" data-c="${c.id}" aria-label="${esc(c.name)}"></td>`).join('')}<td><button class="btn" data-a="deltask" data-i="${i}" aria-label="Delete task">🗑</button></td></tr>`).join('')}</table></div>
+ <button class="btn pri" data-a="addtask">+ Add task / class</button> <span class="mut">Unticking "On" hides a task but keeps its history.</span></div>
+ <div class="card"><h3>Parent PIN</h3><p class="mut">The PIN only keeps curious kids out of Parent Mode on this device. It is <b>not</b> real security: anyone who can open the browser's developer tools or the file can bypass it.</p>
+ <button class="btn" data-a="setpin">${s.pin?'Change':'Set'} PIN</button> ${s.pin?'<button class="btn" data-a="clearpin">Remove PIN</button>':''}</div>
+ <div class="card"><h3>Backup</h3><div class="row"><button class="btn pri" data-a="export">⬇ Export backup (JSON)</button><label class="btn">⬆ Import backup<input type="file" accept=".json" data-a="import" hidden></label><button class="btn" data-a="go" data-n="report">Printable report</button></div>
+ <p class="mut">Export every few days — your data lives only in this browser.</p></div>
+ <div class="card"><h3>Reset challenge</h3><button class="btn danger" data-a="reset">Reset all progress…</button></div>`}
+/* ---------- Render & navigation ---------- */
+function render(){const lock=['checkin','settings'].includes(view.n)&&S.settings.pin&&!unlocked;
+ $('#nav').innerHTML=[['home','🏠 Home'],['checkin','✅ Check-in'],['journey','🗺️ Journey'],['report','📊 Report'],['settings','⚙️ Parent']].map(([n,l])=>`<button class="${view.n===n?'on':''}" data-a="go" data-n="${n}">${l}</button>`).join('');
+ $('#app').innerHTML=lock?`<div class="card"><h2>🔒 Parent Mode</h2><p>Enter the parent PIN.</p><div class="row"><input id="pin" type="password" inputmode="numeric" autocomplete="off" aria-label="PIN"><button class="btn pri" data-a="unlock">Unlock</button></div></div>`
+ :({home:vHome,child:()=>vChild(view.id),checkin:vCheckin,journey:vJourney,report:vReport,settings:vSettings}[view.n]||vHome)();
+ document.documentElement.style.setProperty('--c',view.n==='child'?(child(view.id)?.color||'#3b82f6'):'#3b82f6')}
+const $=q=>document.querySelector(q);
+const hash=p=>{let h=5381;for(const ch of 'raffa'+p)h=(h*33)^ch.charCodeAt(0);return String(h>>>0)};
+function setPath(p,v){const k=p.split('.');let o=S;k.slice(0,-1).forEach(x=>o=o[x]);o[k[k.length-1]]=v}
+const commit=()=>{save();render()};
+function toggleRec(cid,d,tid,v){const key=rk({id:cid},d,tid);if(v)S.rec[key]=v;else delete S.rec[key]}
+document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el||el.tagName==='INPUT'||el.tagName==='TEXTAREA')return;const a=el.dataset.a,D=el.dataset;
+ if(a==='go'){view={n:D.n,id:D.id,date:D.d};render()}
+ else if(a==='unlock'){if(hash($('#pin').value)===S.settings.pin){unlocked=true;render()}else toast('That PIN doesn\'t match — try again.')}
+ else if(a==='kidtap'){const c=child(D.c),x=st(c.id,today(),D.t);if(x===0)toggleRec(c.id,today(),D.t,c.selfApprove?1:2);else if(x===2||unlocked)toggleRec(c.id,today(),D.t,0);else toast('Great job! A grown-up can change this if needed.');commit()}
+ else if(a==='ptoggle'){const x=st(D.c,D.d,D.t);toggleRec(D.c,D.d,D.t,x===1?3:x===3?0:1);commit()}
+ else if(a==='bonus'){(S.bonus[D.k]??=[]).push({pts:+D.p,label:D.l});commit();toast('Bonus added')}
+ else if(a==='rmbonus'){S.bonus[D.k].splice(+D.i,1);commit()}
+ else if(a==='screen'){S.screen[D.k]=Math.max(0,(S.screen[D.k]||0)+ +D.n);commit()}
+ else if(a==='addchild'){S.children.push({id:'c'+Date.now(),name:'New child',age:8,avatar:'🌟',color:'#0d9488',selfApprove:false,prize:'',th:[80,90,100]});commit()}
+ else if(a==='delchild'){const c=S.children[+D.i];if(S.children.length<2)toast('Keep at least one child.');else if(confirm('Remove '+c.name+' and all their progress? This cannot be undone. (Tip: export a backup first.)')){S.children.splice(+D.i,1);const pre=c.id+'|';for(const m of [S.rec,S.bonus,S.notes,S.screen])for(const k in m)if(k.startsWith(pre))delete m[k];S.tasks.forEach(t=>{if(t.kids.includes(c.id)){t.kids=t.kids.filter(x=>x!==c.id);if(!t.kids.length)t.active=false}});view={n:'settings'};commit();toast('Child removed')}}
+ else if(a==='addtask'){S.tasks.push(T('t'+Date.now(),'learn','⭐','New activity',5));commit()}
+ else if(a==='deltask'){if(confirm('Delete this task? Its history will be lost. (Untick "On" to keep history.)')){S.tasks.splice(+D.i,1);commit()}}
+ else if(a==='setpin'){const p=prompt('Choose a PIN (4+ digits):');if(p&&p.length>=4){S.settings.pin=hash(p);unlocked=true;commit();toast('PIN saved')}}
+ else if(a==='clearpin'){S.settings.pin='';commit()}
+ else if(a==='export'){const b=new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),u=document.createElement('a');u.href=URL.createObjectURL(b);u.download='adventure-backup-'+today()+'.json';u.click()}
+ else if(a==='reset'){if(confirm('Are you sure? This will erase all current challenge progress.')&&prompt('Type RESET to confirm. Tip: export a backup first.')==='RESET'){const k=S.children,t=S.tasks,s=S.settings;S={...defaults(),children:k,tasks:t,settings:{...s,start:today()}};commit();toast('Challenge reset')}}});
+document.addEventListener('change',e=>{const el=e.target,D=el.dataset;
+ if(D.p){let v=D.b?el.checked:D.n?+el.value:el.value;if(D.n&&(isNaN(v)||v<0))v=0;setPath(D.p,v);commit()}
+ else if(D.a==='assign'){const t=S.tasks[+D.i],all=S.children.map(c=>c.id);let ids=t.kids.length?t.kids:all;ids=el.checked?[...new Set([...ids,D.c])]:ids.filter(x=>x!==D.c);t.kids=ids.length===all.length?[]:ids;commit()}
+ else if(D.a==='chdate'){if(el.value){view.date=el.value;render()}}
+ else if(D.a==='note'){S.notes[D.k]=el.value;save()}
+ else if(D.a==='import'){const f=el.files[0];if(!f)return;f.text().then(t=>{try{const j=JSON.parse(t);if(!j||!Array.isArray(j.children)||!Array.isArray(j.tasks)||!j.settings||!j.rec)throw 0;if(confirm('Replace current data with this backup?')){S=j;commit();toast('Backup restored')}}catch{toast('That file doesn\'t look like a valid backup.')}})}});
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+(async()=>{S=(await load())||defaults();save();render();if(memOnly)toast('Storage unavailable — please Export often')})();
+</script></body></html>
